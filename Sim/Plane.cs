@@ -19,7 +19,7 @@
 
                         this.callBack(new PlaneEvent
                         {
-                            Event = recEvent.ToString(),
+                            Event = recEvent,
                             Parameter = null
                         });
                             
@@ -29,7 +29,7 @@
                     {
                         this.callBack(new PlaneEvent
                         {
-                            Event = EVENTS.SimStop.ToString(),
+                            Event = recEvent,
                             Parameter = new object[0]
                         });
                         break;
@@ -41,9 +41,10 @@
         {
             this.callBack(new PlaneEvent
             {
-                Event = "QUIT",
+                Event = EVENTS.APPLICATION_QUIT,
                 Parameter = new object[0]
             });
+            this.isInit = false;
             //System.Environment.Exit(0);
         }
     }

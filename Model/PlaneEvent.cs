@@ -5,7 +5,7 @@ namespace msfs_simple_sail
     public class PlaneEvent
     {
         [JsonProperty("event")]
-        public string Event { get; set; }
+        public Aircraft.EVENTS Event { get; set; }
         [JsonProperty("parameter")]
         public object Parameter { get; set; }
 

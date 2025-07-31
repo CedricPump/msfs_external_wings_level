@@ -110,7 +110,29 @@ namespace msfs_simple_sail
             SIM_RATE,
             SIM_RATE_DECR,
             SIM_RATE_INCR,
-            SIM_RATE_SET
+            SIM_RATE_SET,
+            AP_MASTER,          // Toggles AP on/off
+            AUTOPILOT_ON,       // Turns AP on
+            AUTOPILOT_OFF,      // Turns AP off
+            AUTOPILOT_DISENGAGE_TOGGLE, // Toggle the status of the AP disengage value.
+            AP_ATT_HOLD_ON,     // Turns on AP wing leveler and pitch hold mode
+            AP_ATT_HOLD,        // Toggle attitude hold mode
+            AP_BANK_HOLD,       // Toggles the autopilot bank hold mode on / off.
+            AP_BANK_HOLD_OFF,   // Turns off the autopilot bank hold mode.
+            AP_BANK_HOLD_ON,    // Turns on the autopilot bank hold mode.
+            AP_WING_LEVELER,    // Toggles wing leveler mode
+            AP_WING_LEVELER_OFF,// Turns off wing leveler mode
+            AP_WING_LEVELER_ON, // Turns wing leveler mode on
+            AP_HDG_HOLD,        // Toggles heading hold mode
+            AP_HDG_HOLD_ON,
+            AP_HDG_HOLD_OFF,
+            AP_ALT_HOLD,
+            AP_ALT_HOLD_ON,
+            AP_ALT_HOLD_OFF,
+            AP_PANEL_VS_ON,
+            AP_PANEL_VS_HOLD,
+            AP_PANEL_VS_OFF,
+            APPLICATION_QUIT
         };
 
         public static EVENTS[] SystemEvents = new EVENTS[] {

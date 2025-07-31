@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-internal sealed class Autopilot
+public  sealed class Autopilot
 {
     // PID gains for bank ➜ aileron
     public double BankKp { get; set; }
@@ -23,6 +23,35 @@ internal sealed class Autopilot
     // PID state for vertical speed
     private double _vsIntegral = 0;
     private double _vsLastError = 0;
+
+    private double _targetBank = 0;
+    private double _targetVS = 0;
+
+    public double TargetBank 
+    { 
+        get { return _targetBank; }
+        set 
+        {
+            if(_targetBank == value) return;
+            // reset learned data
+            _bankLastError = 0;
+            _bankIntegral = 0;
+            this._targetBank = value;
+        }
+    }
+    public double TargetVS 
+    {
+        get { return _targetVS; }
+        set
+        {
+            if(_targetVS == value) return;
+            // reset learned data
+            _vsLastError = 0;
+            _vsIntegral = 0;
+            this._targetVS = value;
+        }
+    }
+
 
     public Autopilot(
         double bankKp = 0.095, double bankKi = 0.0, double bankKd = 0.009,
@@ -52,7 +81,7 @@ internal sealed class Autopilot
         if (dt <= 0) dt = 0.0001;
 
         // --- Bank ➜ Aileron ---
-        double bankError = 0.0 - currentBankDeg;
+        double bankError = _targetBank - currentBankDeg;
 
         _bankIntegral += bankError * dt;
         double bankDerivative = (bankError - _bankLastError) / dt;
@@ -62,7 +91,7 @@ internal sealed class Autopilot
         aileron = Clamp(aileron, -1.0, 1.0);
 
         // --- VS ➜ Elevator ---
-        double vsError = 0.0 - currentVerticalSpeed;
+        double vsError = _targetVS - currentVerticalSpeed;
 
         _vsIntegral += vsError * dt;
         double vsDerivative = (vsError - _vsLastError) / dt;

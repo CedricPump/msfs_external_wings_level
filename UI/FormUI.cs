@@ -17,7 +17,7 @@ namespace msfs_simple_sail_core.UI
             InitializeComponent();
             Config = Config.GetInstance();
 
-            this.Text = "MSFS External Wings Level " + VersionHelper.GetVersion();
+            this.Text = "MSFS External Wings Level " + VersionHelper.GetVersion() + " - " + (this.controller.IsReady() ? "(connected)" : "(not connected)");
 
 #pragma warning disable CA1416 // Validate platform compatibility
 #pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -42,6 +42,12 @@ namespace msfs_simple_sail_core.UI
             this.checkBoxAutoPauseVS.Checked = Config.autoPauseVSActive;
             this.numericUpDownLimitAltAgl.Value = Config.autoPauseAltLimit;
             this.numericUpDownLimitVS.Value = Config.autoPauseVSLimit;
+            foreach (var item in controller.BankHoldControls.Keys)
+            {
+                this.comboBoxLvlHoldControls.Items.Add(item);
+            }
+            comboBoxLvlHoldControls.Text = controller.BankHoldControlSelected;
+
 
             timer1.Start();
 
@@ -54,25 +60,23 @@ namespace msfs_simple_sail_core.UI
                 if (!this.Config.autoPauseAltActive && this.checkBoxAutoPauseAltALG.Checked) this.checkBoxAutoPauseAltALG.Checked = false;
                 if (!this.Config.autoPauseVSActive && this.checkBoxAutoPauseVS.Checked) this.checkBoxAutoPauseVS.Checked = false;
             }
+
+            // set Buttons
+            this.buttonAP.FlatAppearance.BorderColor = this.controller.APActive ? Color.Green : SystemColors.ControlText;
+            this.buttonlvl.FlatAppearance.BorderColor = this.controller.LvLHold ? Color.Green : SystemColors.ControlText;
+            this.buttonBNK.FlatAppearance.BorderColor = this.controller.BankHold ? Color.Green : SystemColors.ControlText;
+            this.buttonVS.FlatAppearance.BorderColor = this.controller.VSActive ? Color.Green : SystemColors.ControlText;
+            this.buttonALT.FlatAppearance.BorderColor = this.controller.VSHold ? Color.Green : SystemColors.ControlText;
+
+            this.Text = "MSFS External Wings Level " + VersionHelper.GetVersion() + " - " + (this.controller.IsReady() ? "(connected)" : "(not connected)");
+
+            this.numericUpDownBNK.Value = (decimal) controller.autopilot.TargetBank;
+            this.numericUpDownVS.Value = (decimal) controller.autopilot.TargetVS;
+
+            this.labelDebugText.Text = $"{controller.BankHoldControlSelected}: {controller.aileronTrimPerc,4:0}% Elevator Trim: {controller.elevatorTrimPerc,4:0}%";
         }
 
-        private void buttonlvl_Click(object sender, EventArgs e)
-        {
-            controller.LvlHold = !controller.LvlHold;
-            if (controller.LvlHold)
-            {
-                this.buttonlvl.FlatAppearance.BorderColor = Color.Green;
-                // this.buttonlvl.ForeColor = Color.Green;
-                this.buttonlvl.ForeColor = SystemColors.ControlText;
-                // this.buttonlvl.Text = "¯\\_(ツ)_ /¯";
-            }
-            else
-            {
-                this.buttonlvl.FlatAppearance.BorderColor = SystemColors.ControlText;
-                this.buttonlvl.ForeColor = SystemColors.ControlText;
-                // this.buttonlvl.Text = "LVL";
-            }
-        }
+
 
         private void checkBoxAutoPauseVS_CheckedChanged(object sender, EventArgs e)
         {
@@ -112,11 +116,169 @@ namespace msfs_simple_sail_core.UI
 
         private void numericUpDownLimitAltAgl_ValueChanged(object sender, EventArgs e)
         {
-            this.Config.autoPauseAltLimit = (int) this.numericUpDownLimitAltAgl.Value;
-            try 
+            this.Config.autoPauseAltLimit = (int)this.numericUpDownLimitAltAgl.Value;
+            try
             {
                 this.Config.Save();
-            } catch { }
+            }
+            catch { }
+        }
+
+        private void comboBoxLvlHoldControls_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            this.controller.BankHoldControlSelected = comboBoxLvlHoldControls.Text;
+        }
+
+        private void FormUI_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void labelDebugText_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBoxUserElevator_CheckedChanged(object sender, EventArgs e)
+        {
+            this.controller.useElevator = checkBoxUserElevator.Checked;
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        /// <summary>
+        /// AP Toggle
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void buttonAP_Click(object sender, EventArgs e)
+        {
+            if (this.controller.APActive)
+            {
+                controller.APActive = false;
+                controller.LvLHold = false;
+                controller.BankHold = false;
+                controller.VSActive = false;
+                controller.VSHold = false;
+            }
+            else
+            {
+                this.controller.APActive = true;
+                this.controller.BankHold = true;
+            }
+        }
+
+        /// <summary>
+        /// LVL
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void buttonlvl_Click(object sender, EventArgs e)
+        {
+
+            if (!controller.LvLHold)
+            {
+                controller.APActive = true;
+                controller.LvLHold = true;
+                controller.BankHold = true;
+                controller.VSActive = true;
+                controller.VSHold = true;
+                controller.autopilot.TargetBank = 0;
+                controller.autopilot.TargetVS = 0;
+                this.numericUpDownBNK.Value = 0;
+                this.numericUpDownVS.Value = 0;
+            }
+            else
+            {
+                controller.APActive = false;
+                controller.LvLHold = false;
+                controller.BankHold = false;
+                controller.VSActive = false;
+                controller.VSHold = false;
+                // do nothing
+            }
+        }
+
+        private void buttonBNK_Click(object sender, EventArgs e)
+        {
+            if (!controller.APActive) return;
+
+            if (controller.BankHold)
+            {
+                // if active disengege 
+                this.controller.BankHold = false;
+                if (controller.LvLHold) controller.LvLHold = false;
+            }
+            else
+            {
+                // if inactive start
+                this.controller.BankHold = true;
+            }
+        }
+
+        private void buttonVS_Click(object sender, EventArgs e)
+        {
+            if (!controller.APActive) return;
+
+            if (controller.VSActive)
+            {
+                // if active disengege 
+                this.controller.VSActive = false;
+                this.controller.LvLHold = false;
+                this.controller.VSHold = false;
+            }
+            else
+            {
+                // if inactive start
+                this.controller.VSActive = true;
+            }
+        }
+
+        private void buttonALT_Click(object sender, EventArgs e)
+        {
+            if (!controller.APActive) return;
+
+            if (controller.VSHold)
+            {
+                // if active no effect, change target VS to disable 
+            }
+            else
+            {
+                // if inactive start
+                this.controller.VSHold = true;
+                this.controller.VSActive = true;
+                this.controller.autopilot.TargetVS = 0;
+                this.numericUpDownVS.Value = 0;
+            }
+        }
+
+        private void numericUpDownBNK_ValueChanged(object sender, EventArgs e)
+        {
+            if (!controller.APActive) return;
+
+            decimal selcetedBank = this.numericUpDownBNK.Value;
+            if (controller.BankHold)
+            {
+                this.controller.autopilot.TargetBank = (double)selcetedBank;
+            }
+
+            if(selcetedBank != 0) this.controller.LvLHold = false;
+        }
+
+        private void numericUpDownVS_ValueChanged(object sender, EventArgs e)
+        {
+            if (!controller.APActive) return;
+
+            decimal selcetedVS = this.numericUpDownVS.Value;
+            if (selcetedVS != 0)
+            {
+                this.controller.LvLHold = false;
+                this.controller.VSHold = false;
+                this.controller.autopilot.TargetVS = (double)selcetedVS;
+            }
         }
     }
 }
